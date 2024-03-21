@@ -13,6 +13,7 @@ def main():
     Returns
     -------
     None
+
     """
 
     app_mode = st.sidebar.selectbox(
@@ -31,7 +32,17 @@ def main():
         DeepKoopMan()
 
 def presentation():
-    """Displays a Google Slide presentation in an iframe component."""
+    """Displays a Google Slide presentation in an iframe component.
+
+    This function embeds a Google Slide presentation using the `iframe` component
+    provided by Streamlit. The presentation is loaded from a specified URL and
+    displayed with a width of 760 pixels and a height of 569 pixels.
+
+    Returns
+    -------
+    None
+    
+    """
 
     components.iframe('https://docs.google.com/presentation/d/e/2PACX-1vRGr71q2lBK2Oymklg6DgEjIlWNkVfs7DqznOw_Gu9e-8VhexTUiegk2d1xtAZKvlLjbDmUX8V0e0qA/embed?start=true&loop=true&delayms=3000',width=760,height=569)
 
@@ -44,6 +55,7 @@ def DeepKoopMan():
     Returns
     -------
     None
+
     """
     
     df, params = preprocessingData.preprocessDiscreteSpectrum(dataPath="data/DiscreteSpectrumExample_train1_x.csv")

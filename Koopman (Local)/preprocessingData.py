@@ -2,6 +2,29 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 def preprocessDiscreteSpectrum(dataPath):
+    """Preprocess the discrete spectrum data.
+
+    Parameters
+    ----------
+    dataPath : str
+        The file path to the discrete spectrum data.
+
+    Returns
+    -------
+    pd.DataFrame, dict
+        Returns a tuple containing:
+        - df : pd.DataFrame
+            The preprocessed DataFrame containing trajectory samples.
+        - params : dict
+            A dictionary containing various parameters for the preprocessing.
+
+    Notes
+    -----
+    This function reads the data from the specified file path and initializes
+    parameters related to dataset, loss function, and network architecture.
+    The DataFrame and the parameters dictionary are returned.
+
+    """
 
     #Initializing the dataframe of trajectory sample
     df = pd.read_csv(dataPath, names = ["X1", "X2"], header=None)
