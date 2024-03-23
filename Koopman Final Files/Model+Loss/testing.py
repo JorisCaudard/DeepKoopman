@@ -2,6 +2,7 @@ import torch
 import simpleKoopmanAutoencoder as kp
 import dataloader as dl
 import matplotlib.pyplot as plt
+import numpy as np
 
 params = {}
 
@@ -10,49 +11,38 @@ params['lenTime'] = 51
 params['deltaT'] = 0.02
 
 #Settings related to loss function
-params['numShifts'] = 30
-params['reconLam'] = .1
-params['LinfLam'] = 10 ** (-7)
-params['L2Lam'] = 10 ** (-15)
+params['numShifts'] = 50
 
 #Settings related to Network Architecture
 params['inputSize'] = 2
-params['hiddenSize'] = 30
+params['hiddenSize'] = 50
 params['hiddenLayer'] = 2
-params['latentSize'] = 2
+params['latentSize'] = 3
 
-
-testDataset = dl.TrajectoryDataset('Koopman (Local)/data/DiscreteSpectrumExample_train1_x.csv')
-
-
-trajectoryX = [tensor[0].tolist() for tensor in testDataset[0][1]]
-trajectoryY = [tensor[1].tolist() for tensor in testDataset[0][1]]
-
-plt.plot(trajectoryX, trajectoryY)
-plt.show()
+valDataset = dl.TrajectoryDataset('Koopman Final Files/Data/DiscreteSpectrumExample_train.csv')
 
 testModel = kp.SimpleKoopmanNeuralNetwork(params)
 
-testModel.load_state_dict(torch.load('trainedModel.pt'))
+testModel.load_state_dict(torch.load('Koopman Final Files/Model+Loss/trainedModel.pt'))
 testModel = testModel.to(torch.float64)
 
-trajectoryPrediction, latentTrajectoryPrediction = testModel(testDataset[0][0])
+print(valDataset[0])
 
-trajectoryX = [tensor[0].tolist() for tensor in trajectoryPrediction]
-trajectoryY = [tensor[1].tolist() for tensor in trajectoryPrediction]
+for i in range(1):
+    print(i)
+    trajectoryX = [tensor[0].item() for tensor in valDataset[i]]
+    trajectoryY = [tensor[1].item() for tensor in valDataset[i]]
 
-plt.plot(trajectoryX, trajectoryY)
-plt.show()
+    plt.plot(trajectoryX, trajectoryY, color= 'green')
 
-testLoss = kp.LossFunction(params)
+   
+    trajectoryPrediction = testModel(valDataset[i][0])
+    print(trajectoryPrediction)
 
-print("Loss = ", testLoss(testDataset[0][1], testModel))
+    trajectoryX = [tensor[0].item() for tensor in trajectoryPrediction]
+    trajectoryY = [tensor[1].item() for tensor in trajectoryPrediction]
 
-testTrajectoryPrediction, latentTrajectoryPrediction = testModel(torch.randn(2, dtype= torch.float64))
+    plt.plot(trajectoryX, trajectoryY)
+    plt.scatter(trajectoryX, trajectoryY, color= 'red')
 
-testTrajectoryX = [tensor[0].tolist() for tensor in trajectoryPrediction]
-testTrajectoryY = [tensor[1].tolist() for tensor in trajectoryPrediction]
-
-plt.plot(testTrajectoryX, testTrajectoryY, label='Line')
-plt.scatter(testTrajectoryX, testTrajectoryY, color='red')
 plt.show()
