@@ -54,14 +54,17 @@ class SimpleKoopmanNeuralNetwork(nn.Module):
         latentTrajectoryPrediction = [encodedInitialInput]
 
         #Alongside the trajectory, we multiply by the Koopman operator
-        for m in range(49):
+        for _ in range(49):
             latentTrajectoryPrediction.append(self.K(latentTrajectoryPrediction[-1]))
 
         #Decoding the trajectory
-        trajectoryPrediction = [self.Decoder(latentState) for latentState in latentTrajectoryPrediction]
+        trajectoryPrediction = []
+
+        for latentState in latentTrajectoryPrediction:
+            trajectoryPrediction.append(self.Decoder(latentState))
         
-        #We get both the encoded trajectory and the decoded trajectory
-        return trajectoryPrediction, latentTrajectoryPrediction
+        #We output the trajectoryPrediction
+        return trajectoryPrediction
     
     
 
@@ -69,41 +72,17 @@ class LossFunction(nn.Module):
     def __init__(self, params):
         super().__init__()
 
-        # We intialize the loss based on the parameters in the dictionnary
-        self.alpha1 = params['reconLam']
-        self.alpha2 = params['LinfLam']
-        self.alpha3 = params['L2Lam']
-
         self.numShifts = params['numShifts']
 
-    def forward(self, trajectoryInput, koopmanModel):
-        
-        #We get the prediction from the model we initialize the loss function with
-        trajectoryPrediction, latentTrajectoryPrediction = koopmanModel(trajectoryInput[0])
-
-        #We compute the auto-encoder loss for the initial state
-        lossRecon = F.mse_loss(trajectoryInput[0], trajectoryPrediction[0])
+    def forward(self, targetTrajectory, predictedTrajectory):
 
         #We compute the Prediction loss
         lossPred = 0
 
         for m in range(self.numShifts):
-            lossPred += F.mse_loss(trajectoryInput[m+1], trajectoryPrediction[m+1])
+            lossPred += F.mse_loss(targetTrajectory[m], predictedTrajectory[m])
 
-        lossPred *= (1/self.numShifts)
-
-        #We compute the Linear loss on the whole trajectory using the encoder of the model
-        lossLin = 0
-
-        for m in range(49):
-            lossLin += F.mse_loss(koopmanModel.Encoder(trajectoryInput[m+1]), latentTrajectoryPrediction[m+1])
-
-        lossLin *= (1/49)
-
-        #We compute the infinite loss
-        lossInf = torch.linalg.vector_norm(trajectoryInput[0] - trajectoryPrediction[0]) + torch.linalg.vector_norm(trajectoryInput[1] - trajectoryPrediction[1]) 
-
-        return self.alpha1*(lossRecon + lossPred) + lossLin + self.alpha2*lossInf
+        return lossPred
     
 
 
@@ -112,16 +91,8 @@ if __name__ == '__main__':
     #Initializing the parameters dictionary
     params = {}
 
-    #Settings related to dataset
-    params['lenTime'] = 51
-    params['deltaT'] = 0.02
-
     #Settings related to loss function
-    params['numShifts'] = 30
-    params['reconLam'] = .1
-    params['LinfLam'] = 10 ** (-7)
-    params['L2Lam'] = 10 ** (-15)
-
+    params['numShifts'] = 50
     #Settings related to Network Architecture
     params['inputSize'] = 2
     params['hiddenSize'] = 30
@@ -130,13 +101,12 @@ if __name__ == '__main__':
 
 
     testKoopmanModel = SimpleKoopmanNeuralNetwork(params)
-
     testKoopmanModel = testKoopmanModel.to(torch.float64)
 
     testDataset = dataloader.TrajectoryDataset('Koopman (Local)/data/DiscreteSpectrumExample_train1_x.csv')
 
     testLoss = LossFunction(params)
 
-    print(testLoss(testDataset[0][1], testKoopmanModel))
+    print(testLoss(testDataset[0], testKoopmanModel(testDataset[0][0])))
 
     print(testKoopmanModel(testDataset[0][0]))

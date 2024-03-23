@@ -3,60 +3,63 @@ import dataloader as dl
 import torch
 
 
-def pytorchTraining(koopmanModel, koopmanLoss, optimizer, numEpochs, dataloader):
+def pytorchTraining(koopmanModel, koopmanLoss, optimizer, epoch, dataloader):
   
   koopmanModel.train()
-  
-  
-  for epoch in range(numEpochs):
+  epLoss = 0
+  size = len(dataloader)
 
-    runningLoss = 0
-    
-    for input, target in dataloader:
-      optimizer.zero_grad()
+  for target in dataloader:
 
+    optimizer.zero_grad()
 
-      loss = koopmanLoss(target, koopmanModel)
+    initialState, trueTrajectory = target[0], target  
 
-      loss.backward()
-      optimizer.step()
+    predictedTrajectory = koopmanModel(initialState)
 
-      runningLoss += loss.item()
+    loss = koopmanLoss(trueTrajectory, predictedTrajectory)
 
-    print(f'Epoch {epoch}, loss = {runningLoss}')
+    epLoss += loss.item()
 
-  torch.save(koopmanModel.state_dict(), 'trainedModel.pt')
+    loss.backward()
+    optimizer.step()
+
+  print(f'Epoch {epoch}, loss = {epLoss/size}')
+
+  return koopmanModel
 
 
 if __name__ == '__main__':
 #Initializing the parameters dictionary
-    params = {}
+  params = {}
 
-    #Settings related to dataset
-    params['lenTime'] = 51
-    params['deltaT'] = 0.02
+  #Settings related to dataset
+  params['lenTime'] = 51
+  params['deltaT'] = 0.02
 
-    #Settings related to loss function
-    params['numShifts'] = 30
-    params['reconLam'] = .1
-    params['LinfLam'] = 0
-    params['L2Lam'] = 0
+  #Settings related to loss function
+  params['numShifts'] = 50
 
-    #Settings related to Network Architecture
-    params['inputSize'] = 2
-    params['hiddenSize'] = 30
-    params['hiddenLayer'] = 2
-    params['latentSize'] = 2
+  #Settings related to Network Architecture
+  params['inputSize'] = 2
+  params['hiddenSize'] = 50
+  params['hiddenLayer'] = 2
+  params['latentSize'] = 3
 
 
-    testKoopmanModel = kp.SimpleKoopmanNeuralNetwork(params)
+  testKoopmanModel = kp.SimpleKoopmanNeuralNetwork(params)
+  testKoopmanModel = testKoopmanModel.to(torch.float64)
 
-    testKoopmanModel = testKoopmanModel.to(torch.float64)
+  testDataset = dl.TrajectoryDataset('Koopman Final Files/Data/DiscreteSpectrumExample_train.csv')
 
-    testDataset = dl.TrajectoryDataset('Koopman (Local)/data/DiscreteSpectrumExample_train1_x.csv')
+  testDataloader = dl.getDataLoader(testDataset)
 
-    testDataloader = dl.getDataLoader(testDataset)
 
-    testLoss = kp.LossFunction(params)
+  testLoss = kp.LossFunction(params)
 
-    pytorchTraining(testKoopmanModel, testLoss, torch.optim.Adam(testKoopmanModel.parameters(), lr= 0.001), 100, testDataloader)
+  epochs = 50
+
+  for t in range(epochs):
+    pytorchTraining(testKoopmanModel, testLoss, torch.optim.Adam(testKoopmanModel.parameters()), t, testDataloader)
+  
+  torch.save(testKoopmanModel.state_dict(), 'Koopman Final Files/Model+Loss/trainedModel.pt')
