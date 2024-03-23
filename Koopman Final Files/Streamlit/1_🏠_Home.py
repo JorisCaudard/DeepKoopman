@@ -2,16 +2,30 @@ import streamlit as st
 
 st.set_page_config(
     page_title="Learning Koopman Operator with Deep Neural Networks",
-    page_icon="📚"
+    page_icon="📚",
+    layout= 'wide'
 )
 
-st.title("Page Principale")
+st.title('Aperçu du projet')
 
-st.header("Introduction", divider= True)
+st.markdown("""
+Bienvenue sur la page d'aperçu du projet. Ce projet vise à comprendre les deux articles 
+(https://www.nature.com/articles/s41467-018-07210-0 et 
+https://proceedings.neurips.cc/paper/2017/file/3a835d3215755c435ef4fe9965a3f2a0-Paper.pdf),
+puis d'implémenter un Autoencoder identifiant l'opérateur de Koopman.
 
-st.write("""
-Ce projet a été développé dans le cadre du cours "Projet de Deep Learning" par Caudard Joris, Zheng Vicky, Andriarimanana Sylviane.
+## Objectifs
+Les principaux objectifs de ce projet sont les suivants :
+- Présenter de manière concise un résumé des travaux.
+- Implémenter un réseau neuronal pour estimer l'opérateur de Koopman.
 
-L'objectif de ce projet est une implémentation deréseaux de neurones capables d'identifier l'opérateur de Koopman dans le cadre des systèmes dynamiques.
+## Auteurs
+Ce projet est réalisé par:
+                
+**Huiqi Vicky ZHENG**
+            
+**Joris CAUDARD**
+            
+**Fanilosoan'Ivahiny La Sylviane ANDRIARIMANANA**
 """)
 
